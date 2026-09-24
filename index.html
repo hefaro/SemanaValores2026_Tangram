@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tangram Escolar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #1e1b4b;
+            color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Colores explícitos para asegurar lectura en gris claro */
+        .txt-title-light {
+            color: #e2e8f0 !important; /* Gris muy claro */
+        }
+        .txt-subtitle-light {
+            color: #94a3b8 !important; /* Gris medio claro */
+        }
+
+        /* Cuadrícula forzada 2x2 para botones */
+        .buttons-grid-2x2 {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.35rem !important;
+            flex-shrink: 0;
+        }
+
+        /* Botón de la barra superior */
+        .btn-header {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.35rem !important;
+            padding: 0.45rem 0.6rem !important;
+            background-color: #4f46e5 !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 0.725rem !important;
+            border-radius: 0.625rem !important;
+            box-shadow: 0 3px 0 #312e81 !important;
+            text-decoration: none !important;
+            border: none !important;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-header:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #312e81 !important;
+        }
+
+        /* Centrado de Canvas */
+        canvas {
+            touch-action: none;
+            background-color: #0f172a;
+            border-radius: 1.25rem;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Botones táctiles de control */
+        .btn-kid {
+            transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+        }
+        .btn-kid:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        /* Dock flotante centrado */
+        .dock-panel {
+            background: rgba(30, 27, 75, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between h-screen w-screen overflow-hidden">
+
+    <!-- Header / Barra Superior -->
+    <header class="bg-indigo-950/95 border-b border-indigo-800/80 sticky top-0 z-20 px-3 py-2 backdrop-blur-md shadow-lg w-full">
+        <div class="max-w-md mx-auto flex justify-between items-center gap-2 w-full">
+            
+            <!-- Logo e Identidad (Letras en Gris Claro) -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="w-9 h-9 bg-slate-700 text-slate-200 rounded-xl flex items-center justify-center font-extrabold text-base border border-slate-600 shadow-sm">
+                    <i class="fa-solid fa-shapes"></i>
+                </div>
+                <div>
+                    <h1 class="text-xs sm:text-sm font-extrabold tracking-tight txt-title-light leading-none">
+                        Tangram <span class="txt-subtitle-light">Escolar</span>
+                    </h1>
+                    <p class="text-[9px] sm:text-[10px] txt-subtitle-light font-semibold mt-0.5">Geometría Interactiva</p>
+                </div>
+            </div>
+
+            <!-- Botones en 2 filas y 2 columnas -->
+            <div class="buttons-grid-2x2">
+                <a href="instrucciones.html" title="Ver figuras de ejemplo" class="btn-header">
+                    <i class="fa-solid fa-lightbulb text-amber-300 text-xs"></i>
+                    <span>Ejemplos</span>
+                </a>
+
+                <button onclick="savePositions()" title="Guardar posición" class="btn-header">
+                    <i class="fa-solid fa-floppy-disk text-xs"></i>
+                    <span>Guardar</span>
+                </button>
+
+                <button onclick="loadPositions()" title="Cargar figura" class="btn-header">
+                    <i class="fa-solid fa-folder-open text-xs"></i>
+                    <span>Cargar</span>
+                </button>
+
+                <button onclick="sendToTray()" title="Reiniciar fichas" class="btn-header">
+                    <i class="fa-solid fa-box-open text-xs"></i>
+                    <span>A la Caja</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Área Principal Centrada -->
+    <main class="flex-1 flex flex-col items-center justify-center relative overflow-hidden p-2 w-full max-w-md mx-auto">
+        <div class="relative flex-1 w-full flex flex-col items-center justify-center min-h-0">
+            
+            <!-- Canvas Centrado -->
+            <canvas id="tangramCanvas" class="border-2 border-indigo-700/60 shadow-2xl cursor-grab active:cursor-grabbing"></canvas>
+
+            <!-- Menú Flotante Dock de Control (Centrado) -->
+            <div id="floatingControls" class="absolute bottom-3 left-1/2 -translate-x-1/2 dock-panel shadow-2xl rounded-2xl p-2 flex items-center gap-2 transition-all duration-200 opacity-0 pointer-events-none translate-y-4 z-20 touch-none w-[92%] max-w-xs justify-between">
+                
+                <button onclick="rotateSelectedPiece(45)" title="Girar 45°" 
+                        class="btn-kid flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl flex items-center justify-center gap-1.5 font-extrabold text-xs">
+                    <i class="fa-solid fa-rotate-right text-sm text-amber-300"></i>
+                    <span>Girar 45°</span>
+                </button>
+
+                <button onclick="flipSelectedPiece()" title="Voltear" 
+                        class="btn-kid flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl flex items-center justify-center gap-1.5 font-extrabold text-xs">
+                    <i class="fa-solid fa-right-left text-sm text-sky-300"></i>
+                    <span>Voltear</span>
+                </button>
+
+                <button onclick="deselectPiece()" title="Cerrar" 
+                        class="btn-kid w-10 h-10 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl flex items-center justify-center flex-shrink-0 text-base font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Toast / Notificación -->
+            <div id="snapToast" class="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-indigo-950 font-extrabold px-3.5 py-2 rounded-2xl shadow-xl text-xs flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-200 z-30">
+                <i class="fa-solid fa-star text-indigo-950"></i>
+                <span id="snapToastText">¡Excelente!</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('tangramCanvas');
+        const ctx = canvas.getContext('2d');
+        const floatingControls = document.getElementById('floatingControls');
+
+        let magneticSnapEnabled = true;
+        let selectedPieceIndex = null;
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        let lastTapTime = 0;
+        let lastTapIndex = null;
+        let initialTouchAngle = 0;
+        let initialPieceRotation = 0;
+        let isMultiTouching = false;
+
+        const GRID_UNITS = 8;
+        let boardSize = 480;
+        let trayHeight = 160;
+        let trayGap = 20;
+        let totalCanvasWidth = 480;
+        let totalCanvasHeight = 660;
+        let unitSize = 60;
+
+        const PALETTE = {
+            lt1: '#38bdf8', // Sky
+            lt2: '#a3e635', // Lime
+            mt:  '#facc15', // Yellow
+            st1: '#fbbf24', // Amber
+            st2: '#fb7185', // Rose
+            sq:  '#c084fc', // Purple
+            para:'#f43f5e'  // Red
+        };
+
+        const BASE_PIECES = [
+            { id: 'lt1', name: 'Triángulo Grande 1', color: PALETTE.lt1, localShape: [{x: -2, y: -2/3}, {x: 2, y: -2/3}, {x: 0, y: 4/3}] },
+            { id: 'lt2', name: 'Triángulo Grande 2', color: PALETTE.lt2, localShape: [{x: -2, y: -2/3}, {x: 2, y: -2/3}, {x: 0, y: 4/3}] },
+            { id: 'mt',  name: 'Triángulo Mediano', color: PALETTE.mt,  localShape: [{x: -2/3, y: -2/3}, {x: 4/3, y: -2/3}, {x: -2/3, y: 4/3}] },
+            { id: 'st1', name: 'Triángulo Pequeño 1', color: PALETTE.st1, localShape: [{x: -1, y: -1/3}, {x: 1, y: -1/3}, {x: 0, y: 2/3}] },
+            { id: 'st2', name: 'Triángulo Pequeño 2', color: PALETTE.st2, localShape: [{x: -1, y: -1/3}, {x: 1, y: -1/3}, {x: 0, y: 2/3}] },
+            { id: 'sq',  name: 'Cuadrado',           color: PALETTE.sq,  localShape: [{x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}] },
+            { id: 'para', name: 'Paralelogramo',     color: PALETTE.para,localShape: [{x: -1.5, y: -0.5}, {x: 0.5, y: -0.5}, {x: 1.5, y: 0.5}, {x: -0.5, y: 0.5}] }
+        ];
+
+        let pieces = [];
+
+        function triggerHaptic(duration = 15) {
+            if (navigator.vibrate) {
+                try { navigator.vibrate(duration); } catch (e) {}
+            }
+        }
+
+        function setupCanvas() {
+            const container = canvas.parentElement;
+            const rect = container.getBoundingClientRect();
+            
+            const maxBoardDim = Math.min(rect.width - 12, (rect.height - 150), 480);
+            boardSize = Math.max(260, Math.floor(maxBoardDim));
+            trayHeight = Math.max(120, Math.floor(boardSize * 0.36));
+            trayGap = 14;
+
+            totalCanvasWidth = boardSize;
+            totalCanvasHeight = boardSize + trayGap + trayHeight;
+
+            const oldUnitSize = unitSize;
+            unitSize = boardSize / GRID_UNITS;
+
+            if (oldUnitSize && oldUnitSize !== unitSize && pieces.length > 0) {
+                const scale = unitSize / oldUnitSize;
+                pieces.forEach(p => {
+                    p.x *= scale;
+                    p.y *= scale;
+                });
+            }
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = totalCanvasWidth * dpr;
+            canvas.height = totalCanvasHeight * dpr;
+            canvas.style.width = `${totalCanvasWidth}px`;
+            canvas.style.height = `${totalCanvasHeight}px`;
+
+            ctx.resetTransform();
+            ctx.scale(dpr, dpr);
+
+            if (pieces.length === 0) {
+                initPieces();
+            }
+            render();
+        }
+
+        function initPieces() {
+            const camelTransforms = [
+                { id: 'lt1',  gridX: 3.91667, gridY: 6.00000, rot: 270, flip: false },
+                { id: 'lt2',  gridX: 6.58333, gridY: 6.00000, rot: 90,  flip: false },
+                { id: 'mt',   gridX: 5.91667, gridY: 4.66667, rot: 0,   flip: false },
+                { id: 'sq',   gridX: 4.25000, gridY: 4.00000, rot: 0,   flip: false },
+                { id: 'para', gridX: 2.75000, gridY: 2.50000, rot: 90,  flip: true  },
+                { id: 'st1',  gridX: 2.91667, gridY: 1.00000, rot: 90,  flip: false },
+                { id: 'st2',  gridX: 2.25000, gridY: 0.33333, rot: 0,   flip: false }
+            ];
+
+            pieces = BASE_PIECES.map(p => {
+                const transform = camelTransforms.find(t => t.id === p.id);
+                return {
+                    ...p,
+                    x: transform.gridX * unitSize,
+                    y: transform.gridY * unitSize,
+                    rotation: transform.rot,
+                    flipped: transform.flip
+                };
+            });
+        }
+
+        function savePositions() {
+            const currentTransforms = pieces.map(p => ({
+                id: p.id,
+                gridX: Number((p.x / unitSize).toFixed(5)),
+                gridY: Number((p.y / unitSize).toFixed(5)),
+                rot: p.rotation,
+                flip: p.flipped
+            }));
+
+            const jsonString = JSON.stringify(currentTransforms, null, 4);
+            localStorage.setItem('tangram_saved_figure', jsonString);
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(jsonString).then(() => {
+                    triggerSnapToast("¡Guardado exitoso! 🌟");
+                }).catch(() => {
+                    triggerSnapToast("¡Figura guardada!");
+                });
+            } else {
+                triggerSnapToast("¡Figura guardada!");
+            }
+        }
+
+        function loadPositions() {
+            const savedData = localStorage.getItem('tangram_saved_figure');
+
+            if (savedData) {
+                try {
+                    applyTransforms(JSON.parse(savedData));
+                    triggerSnapToast("¡Figura cargada! 🎉");
+                    return;
+                } catch (e) {
+                    console.error("Error al leer de localStorage", e);
+                }
+            }
+
+            const pasteData = prompt("No hay figura guardada.\n\nPega aquí el código JSON para cargarla:");
+            if (pasteData) {
+                try {
+                    applyTransforms(JSON.parse(pasteData));
+                    triggerSnapToast("¡Figura cargada!");
+                } catch (e) {
+                    alert("Código no válido.");
+                }
+            }
+        }
+
+        function applyTransforms(transforms) {
+            selectedPieceIndex = null;
+            hideFloatingControls();
+
+            transforms.forEach(t => {
+                const p = pieces.find(item => item.id === t.id);
+                if (p) {
+                    p.x = t.gridX * unitSize;
+                    p.y = t.gridY * unitSize;
+                    p.rotation = t.rot;
+                    p.flipped = t.flip;
+                }
+            });
+
+            render();
+        }
+
+        function sendToTray() {
+            selectedPieceIndex = null;
+            hideFloatingControls();
+
+            const trayY = boardSize + trayGap;
+            const trayCenterY1 = trayY + trayHeight * 0.30;
+            const trayCenterY2 = trayY + trayHeight * 0.72;
+            const colWidth = totalCanvasWidth / 4;
+
+            const trayLayout = [
+                { x: colWidth * 0.8,  y: trayCenterY1, rot: 0,   flip: false },
+                { x: colWidth * 2.2,  y: trayCenterY1, rot: 90,  flip: false },
+                { x: colWidth * 3.4,  y: trayCenterY1, rot: 45,  flip: false },
+                { x: colWidth * 0.6,  y: trayCenterY2, rot: 0,   flip: false },
+                { x: colWidth * 1.6,  y: trayCenterY2, rot: 45,  flip: false },
+                { x: colWidth * 2.6,  y: trayCenterY2, rot: 0,   flip: false },
+                { x: colWidth * 3.5,  y: trayCenterY2, rot: 0,   flip: false }
+            ];
+
+            pieces.forEach((p, idx) => {
+                const layout = trayLayout[idx];
+                p.x = layout.x;
+                p.y = layout.y;
+                p.rotation = layout.rot;
+                p.flipped = layout.flip;
+            });
+
+            render();
+            triggerSnapToast("¡Piezas en orden! 📦");
+        }
+
+        function getTransformedVertices(piece) {
+            const rad = (piece.rotation * Math.PI) / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+
+            return piece.localShape.map(pt => {
+                let lx = pt.x * unitSize;
+                let ly = pt.y * unitSize;
+
+                if (piece.flipped) {
+                    lx = -lx;
+                }
+
+                const rx = lx * cos - ly * sin;
+                const ry = lx * sin + ly * cos;
+
+                return {
+                    x: piece.x + rx,
+                    y: piece.y + ry
+                };
+            });
+        }
+
+        function drawPolygon(verts, fillColor, strokeColor, strokeWidth = 2) {
+            if (!verts || verts.length === 0) return;
+            ctx.beginPath();
+            ctx.moveTo(verts[0].x, verts[0].y);
+            for (let i = 1; i < verts.length; i++) {
+                ctx.lineTo(verts[i].x, verts[i].y);
+            }
+            ctx.closePath();
+
+            if (fillColor) {
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+            }
+            if (strokeColor) {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = strokeWidth;
+                ctx.stroke();
+            }
+        }
+
+        function drawRoundedRect(ctx, x, y, w, h, r, fill, stroke) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+            if (fill) ctx.fill();
+            if (stroke) ctx.stroke();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, totalCanvasWidth, totalCanvasHeight);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, boardSize, boardSize);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i <= GRID_UNITS; i++) {
+                const pos = i * unitSize;
+                ctx.beginPath(); ctx.moveTo(pos, 0); ctx.lineTo(pos, boardSize); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, pos); ctx.lineTo(boardSize, pos); ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#312e81';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(0, 0, boardSize, boardSize);
+
+            const trayY = boardSize + trayGap;
+            ctx.fillStyle = '#1e1b4b';
+            drawRoundedRect(ctx, 0, trayY, totalCanvasWidth, trayHeight, 18, true, false);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 6]);
+            drawRoundedRect(ctx, 4, trayY + 4, totalCanvasWidth - 8, trayHeight - 8, 14, false, true);
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(16, trayY - 10, 120, 20);
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '800 11px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('📦 CAJA DE FICHAS', 22, trayY + 3);
+
+            pieces.forEach((piece, index) => {
+                const verts = getTransformedVertices(piece);
+                const isSelected = (index === selectedPieceIndex);
+
+                if (isSelected) {
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(250, 204, 21, 0.6)';
+                    ctx.shadowBlur = 16;
+                    drawPolygon(verts, piece.color, '#ffffff', 3.5);
+                    ctx.restore();
+                } else {
+                    drawPolygon(verts, piece.color, 'rgba(15, 23, 42, 0.7)', 2);
+                }
+            });
+        }
+
+        function snapSelectedPiece() {
+            if (selectedPieceIndex === null || !magneticSnapEnabled) return;
+
+            const piece = pieces[selectedPieceIndex];
+            const normalizedRot = ((piece.rotation % 360) + 360) % 360;
+            const snapRot = Math.round(normalizedRot / 45) * 45;
+            if (Math.abs(normalizedRot - snapRot) < 12) {
+                piece.rotation = snapRot % 360;
+            }
+
+            if (piece.y > boardSize + 10) return;
+
+            const currentVerts = getTransformedVertices(piece);
+            let bestSnapDx = 0;
+            let bestSnapDy = 0;
+            let minDistance = Infinity;
+            const snapThreshold = unitSize * 0.4;
+
+            const referencePoints = [];
+            const gridSubdiv = 0.5;
+            for (let gx = 0; gx <= GRID_UNITS; gx += gridSubdiv) {
+                for (let gy = 0; gy <= GRID_UNITS; gy += gridSubdiv) {
+                    referencePoints.push({ x: gx * unitSize, y: gy * unitSize });
+                }
+            }
+
+            pieces.forEach((otherPiece, idx) => {
+                if (idx !== selectedPieceIndex) {
+                    const otherVerts = getTransformedVertices(otherPiece);
+                    otherVerts.forEach(v => referencePoints.push(v));
+                }
+            });
+
+            currentVerts.forEach(v => {
+                referencePoints.forEach(ref => {
+                    const dist = Math.hypot(ref.x - v.x, ref.y - v.y);
+                    if (dist < snapThreshold && dist < minDistance) {
+                        minDistance = dist;
+                        bestSnapDx = ref.x - v.x;
+                        bestSnapDy = ref.y - v.y;
+                    }
+                });
+            });
+
+            if (minDistance < snapThreshold) {
+                piece.x += bestSnapDx;
+                piece.y += bestSnapDy;
+                triggerHaptic(20);
+                triggerSnapToast("¡Encajado perfecto! ✨");
+            }
+        }
+
+        function isPointInPolygon(pt, poly, touchPadding = 14) {
+            let inside = false;
+            for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                const xi = poly[i].x, yi = poly[i].y;
+                const xj = poly[j].x, yj = poly[j].y;
+                const intersect = ((yi > pt.y) !== (yj > pt.y)) &&
+                    (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            if (inside) return true;
+
+            for (let i = 0; i < poly.length; i++) {
+                const dist = Math.hypot(poly[i].x - pt.x, poly[i].y - pt.y);
+                if (dist <= touchPadding) return true;
+            }
+            return false;
+        }
+
+        function getCanvasCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function handlePointerDown(e) {
+            const now = Date.now();
+            const pos = getCanvasCoordinates(e);
+
+            if (e.touches && e.touches.length >= 2 && selectedPieceIndex !== null) {
+                isMultiTouching = true;
+                isDragging = false;
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialTouchAngle = Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX) * (180 / Math.PI);
+                initialPieceRotation = pieces[selectedPieceIndex].rotation;
+                triggerHaptic(15);
+                return;
+            }
+
+            let foundIdx = null;
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                const verts = getTransformedVertices(pieces[i]);
+                if (isPointInPolygon(pos, verts, 16)) {
+                    foundIdx = i;
+                    break;
+                }
+            }
+
+            if (foundIdx !== null) {
+                if (lastTapIndex === foundIdx && (now - lastTapTime) < 350) {
+                    rotateSelectedPiece(45);
+                    triggerHaptic(20);
+                    triggerSnapToast("¡Giro rápido! 🔄");
+                    lastTapTime = 0;
+                    lastTapIndex = null;
+                    return;
+                }
+
+                lastTapTime = now;
+                lastTapIndex = foundIdx;
+
+                selectedPieceIndex = foundIdx;
+                isDragging = true;
+                triggerHaptic(10);
+
+                const p = pieces.splice(selectedPieceIndex, 1)[0];
+                pieces.push(p);
+                selectedPieceIndex = pieces.length - 1;
+
+                dragOffsetX = pos.x - p.x;
+                dragOffsetY = pos.y - p.y;
+
+                showFloatingControls();
+            } else {
+                deselectPiece();
+            }
+            render();
+        }
+
+        function handlePointerMove(e) {
+            if (isMultiTouching && e.touches && e.touches.length >= 2 && selectedPieceIndex !== null) {
+                e.preventDefault();
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentAngle = Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX) * (180 / Math.PI);
+                const angleDelta = currentAngle - initialTouchAngle;
+
+                pieces[selectedPieceIndex].rotation = Math.round((initialPieceRotation + angleDelta) % 360);
+                render();
+                return;
+            }
+
+            if (!isDragging || selectedPieceIndex === null) return;
+            if (e.cancelable) e.preventDefault();
+
+            const pos = getCanvasCoordinates(e);
+            const piece = pieces[selectedPieceIndex];
+            piece.x = pos.x - dragOffsetX;
+            piece.y = pos.y - dragOffsetY;
+
+            render();
+        }
+
+        function handlePointerUp(e) {
+            if (isMultiTouching) {
+                if (!e.touches || e.touches.length < 2) {
+                    isMultiTouching = false;
+                    snapSelectedPiece();
+                    render();
+                }
+                return;
+            }
+
+            if (isDragging) {
+                isDragging = false;
+                snapSelectedPiece();
+                render();
+            }
+        }
+
+        function rotateSelectedPiece(degrees) {
+            if (selectedPieceIndex === null) return;
+            triggerHaptic(15);
+            const piece = pieces[selectedPieceIndex];
+            piece.rotation = (piece.rotation + degrees) % 360;
+            snapSelectedPiece();
+            render();
+        }
+
+        function flipSelectedPiece() {
+            if (selectedPieceIndex === null) return;
+            triggerHaptic(20);
+            const piece = pieces[selectedPieceIndex];
+            piece.flipped = !piece.flipped;
+            snapSelectedPiece();
+            render();
+        }
+
+        function deselectPiece() {
+            selectedPieceIndex = null;
+            hideFloatingControls();
+            render();
+        }
+
+        function showFloatingControls() {
+            floatingControls.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+            floatingControls.classList.add('opacity-100', 'translate-y-0');
+        }
+
+        function hideFloatingControls() {
+            floatingControls.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+            floatingControls.classList.remove('opacity-100', 'translate-y-0');
+        }
+
+        window.savePositions = savePositions;
+        window.loadPositions = loadPositions;
+        window.sendToTray = sendToTray;
+        window.rotateSelectedPiece = rotateSelectedPiece;
+        window.flipSelectedPiece = flipSelectedPiece;
+        window.deselectPiece = deselectPiece;
+
+        let toastTimeout = null;
+        function triggerSnapToast(msg) {
+            const toast = document.getElementById('snapToast');
+            const toastText = document.getElementById('snapToastText');
+            if (toastText) toastText.textContent = msg;
+
+            if (toast) {
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-100');
+            }
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                if (toast) {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                }
+            }, 1200);
+        }
+
+        window.addEventListener('load', () => {
+            setupCanvas();
+
+            canvas.addEventListener('touchstart', (e) => handlePointerDown(e), { passive: false });
+            canvas.addEventListener('touchmove', (e) => handlePointerMove(e), { passive: false });
+            window.addEventListener('touchend', (e) => handlePointerUp(e));
+
+            canvas.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse') handlePointerDown(e); });
+            canvas.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') handlePointerMove(e); });
+            window.addEventListener('pointerup', (e) => { if (e.pointerType === 'mouse') handlePointerUp(e); });
+
+            window.addEventListener('resize', () => setupCanvas());
+        });
+    </script>
+</body>
+</html>

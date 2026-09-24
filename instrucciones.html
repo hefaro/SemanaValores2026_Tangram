@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrucciones y Figuras - Tangram</title>
+    <!-- Tailwind CSS para un diseño moderno y responsivo -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* Estilos adicionales para asegurar fluidez táctil en móviles */
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased pb-20 sm:pb-8">
+
+    <!-- Encabezado Principal -->
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex flex-row justify-between items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-left">🧩 Guía del Tangram</h1>
+            <a href="index.html" class="bg-indigo-700 hover:bg-indigo-800 text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-sm flex items-center gap-1.5">
+                <span>← Volver</span>
+                <span class="hidden sm:inline">al Juego</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-4xl mx-auto px-4 py-6 space-y-8">
+
+        <!-- Sección de Instrucciones -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8">
+            <h2 class="text-xl sm:text-2xl font-bold text-indigo-600 mb-4 flex items-center gap-2">
+                📖 Instrucciones de Uso
+            </h2>
+            <div class="space-y-4 text-slate-600 text-base sm:text-lg leading-relaxed">
+                <p>
+                    El <strong>Tangram</strong> es un rompecabezas milenario que consta de 7 piezas geométricas (llamadas <em>tans</em>): 5 triángulos de diferentes tamaños, 1 cuadrado y 1 paralelogramo.
+                </p>
+                <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-xl">
+                    <h3 class="font-bold text-indigo-900 mb-2">Reglas Fundamentales:</h3>
+                    <ul class="list-disc list-inside space-y-2 text-indigo-900/90 text-sm sm:text-base">
+                        <li><strong>Usa todas las piezas:</strong> En cada figura armada debes emplear obligatoriamente las 7 piezas.</li>
+                        <li><strong>Sin superposición:</strong> Las piezas no se pueden montar ni solapar unas sobre otras.</li>
+                        <li><strong>Lados tocándose:</strong> Las piezas deben tocarse por sus aristas o vértices.</li>
+                        <li><strong>Rotación y voltee:</strong> Puedes rotar las piezas y voltear el paralelogramo si es necesario para encajar la silueta.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Modelos y Catálogo de Figuras -->
+        <section class="space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8">
+                <h2 class="text-xl sm:text-2xl font-bold text-indigo-600 mb-2">
+                    🎯 Catálogo de Modelos
+                </h2>
+                <p class="text-slate-500 text-sm sm:text-base mb-6">
+                    Toca cualquier imagen para ampliarla y ver los detalles de las figuras con mayor comodidad en tu dispositivo móvil.
+                </p>
+
+                <!-- Cuadrícula optimizada para móviles -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Figura 1 -->
+                    <div class="bg-slate-100 rounded-xl p-3 border border-slate-200 flex flex-col items-center shadow-xs">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Colección Principal (1)</span>
+                        <div class="overflow-hidden rounded-lg bg-white w-full flex justify-center cursor-pointer group relative" onclick="abrirModal('recursos/figuras.png')">
+                            <img src="recursos/figuras.png" alt="Catálogo de figuras Tangram 1" class="w-full h-auto object-contain max-h-80 group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span class="bg-black/70 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow">🔍 Toca para ampliar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Figura 2 -->
+                    <div class="bg-slate-100 rounded-xl p-3 border border-slate-200 flex flex-col items-center shadow-xs">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Colección Principal (2)</span>
+                        <div class="overflow-hidden rounded-lg bg-white w-full flex justify-center cursor-pointer group relative" onclick="abrirModal('recursos/figuras2.png')">
+                            <img src="recursos/figuras2.png" alt="Catálogo de figuras Tangram 2" class="w-full h-auto object-contain max-h-80 group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span class="bg-black/70 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow">🔍 Toca para ampliar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Figura 3 -->
+                    <div class="bg-slate-100 rounded-xl p-3 border border-slate-200 flex flex-col items-center shadow-xs md:col-span-2 max-w-lg mx-auto w-full">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Colección Gran Variedad (3)</span>
+                        <div class="overflow-hidden rounded-lg bg-white w-full flex justify-center cursor-pointer group relative" onclick="abrirModal('recursos/figuras3.png')">
+                            <img src="recursos/figuras3.png" alt="Catálogo de figuras Tangram 3" class="w-full h-auto object-contain max-h-80 group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span class="bg-black/70 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow">🔍 Toca para ampliar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Botón Flotante Fijo de Retorno para Dispositivos Móviles -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-xs">
+        <a href="index.html" class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 active:scale-95 text-white font-bold py-3 px-6 rounded-2xl shadow-xl shadow-indigo-600/30 border border-indigo-400/30 transition-all text-base text-center">
+            <span>🎮</span>
+            <span>Volver al Juego</span>
+        </a>
+    </div>
+
+    <!-- Modal de Pantalla Completa para Ampliar Imágenes en Móvil -->
+    <div id="modalImagen" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col items-center justify-center p-4">
+        <button onclick="cerrarModal()" class="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold backdrop-blur-md transition-colors">
+            ✕
+        </button>
+        <div class="max-w-full max-h-[85vh] overflow-auto flex items-center justify-center">
+            <img id="imagenAmpliada" src="" alt="Figura ampliada" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl">
+        </div>
+        <p class="text-white/70 text-xs mt-4">Toca fuera de la imagen o el botón superior para cerrar</p>
+    </div>
+
+    <!-- Script de Interactividad para el Modal -->
+    <script>
+        function abrirModal(rutaImagen) {
+            const modal = document.getElementById('modalImagen');
+            const img = document.getElementById('imagenAmpliada');
+            img.src = rutaImagen;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModal() {
+            const modal = document.getElementById('modalImagen');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        document.getElementById('modalImagen').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModal();
+            }
+        });
+    </script>
+</body>
+</html>
